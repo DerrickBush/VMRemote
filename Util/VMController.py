@@ -101,7 +101,7 @@ class VMController():
         inputs = self.VoicemeterRemote.inputs
         returnInputs = []
         for input in inputs:
-            if input.__str__().find("PhysicalInputStripPotato") != -1:
+            if input.__str__().find("PhysicalInputStrip") != -1:
                 returnInputs.append(input.index)
         return returnInputs
 

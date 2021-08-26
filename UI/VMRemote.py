@@ -15,7 +15,7 @@ class VMRemote:
     outputButtons = []
     def __init__(self):
         self.Pallet = self.Pallets.getPalletDictionary()
-        self.tk.geometry('18x335' + str(self.Settings.getSetting('xyposition')))
+        self.tk.geometry('18x' + (((len(self.VoicemeeterController.getInputs()))+len(self.VoicemeeterController.getOutputs()))*25) + str(self.Settings.getSetting('xyposition')))
         self.tk.configure(bg = self.Pallet['windowbackground'])
         self.tk.title('Voicemeeter Remote')
         self.tk.overrideredirect(True)
