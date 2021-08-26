@@ -50,7 +50,22 @@ class Pallets():
 
     #Removes pallet from pallet file. Reads in pallets.ini, removes palletName section then writes new config file to pallets.ini
     def removePallet(self, palletName):
-        self.config.read(path.join(self._palletsDirectory, 'pallets.ini'))
         self.config.remove_section(palletName)
         with open(path.join(self._palletsDirectory, 'pallets.ini'), 'w') as configfile:
             self.config.write(configfile)
+
+    #Sets default pallet
+    def setPallet(self, palletName):
+        self.config['DEFAULT']['option'] = palletName
+
+    #Returns list of pallets
+    def getPallets(self):
+        return self.config.sections()
+
+    #Returns pallet dictionary from config file.
+    def getPalletDictionary(self):
+        PalletDictionary = {}
+        for key in self.config[self.config['DEFAULT']['option']].keys():
+            PalletDictionary[key]=self.config[self.config['DEFAULT']['option']][key]
+        PalletDictionary.pop('option', None)
+        return PalletDictionary

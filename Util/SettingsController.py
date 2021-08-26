@@ -2,6 +2,7 @@
 import sys
 from os import path, makedirs
 import configparser
+import ast
 
 #Initialize Settings class
 class Settings():
@@ -31,17 +32,17 @@ class Settings():
         f.close
         self.config['SETTINGS'] = {'version': '0.1',
                                    'XYPosition': 'None',
-                                   'Size': 'None',
                                    'ScreenReader': 'None',
                                    'VMVersion': 'None',
                                    'ignoredInputs': "None",
-                                   'ignoredOutputs': "None"}
+                                   'ignoredOutputs': "None",
+                                   'lockedOnStart': 'False'}
         with open(path.join(self._settingsDirectory, 'settings.ini'), 'w') as configfile:
             self.config.write(configfile)
 
     #Gets a setting value
     def getSetting(self, setting):
-        return self.config['SETTINGS'][setting]
+        return ast.literal_eval(self.config['SETTINGS'][setting])
 
     #Sets a setting value to a new value
     def setSetting(self, setting, newValue):
