@@ -13,14 +13,22 @@ class VMRemote:
     Pallet = None
     inputButtons = []
     outputButtons = []
+    height = None
+    scaleButtons = []
     def __init__(self):
         self.Pallet = self.Pallets.getPalletDictionary()
-        self.tk.geometry('18x' + (((len(self.VoicemeeterController.getInputs()))+len(self.VoicemeeterController.getOutputs()))*25) + str(self.Settings.getSetting('xyposition')))
+        self.tk.geometry('18x' + str((((len(self.VoicemeeterController.getInputs()))+len(self.VoicemeeterController.getOutputs()))*25)+10) + str(self.Settings.getSetting('xyposition')))
         self.tk.configure(bg = self.Pallet['windowbackground'])
         self.tk.title('Voicemeeter Remote')
         self.tk.overrideredirect(True)
         self.tk.attributes("-topmost", True)
         self.__createButtons()
+        if (self.VoicemeeterController.getVersion() == 'basic'):
+            self.height = 135
+        elif (self.VoicemeeterController.getVersion() == 'banana'):
+            self.height = 210
+        elif (self.VoicemeeterController.getVersion() == 'potato'):
+            self.height = 335
         thread = Timer(1, self.__dirtyUpdate)
         thread.start()
 
@@ -30,51 +38,83 @@ class VMRemote:
 
     #Resizes Remote window to show slider or hide slider
     def __resize(self, input_output, channel_number):
+        print(self.tk.winfo_height())
         if not self.VoicemeeterController.isLocked:
             if(self.tk.winfo_width() == 18):
-                self.tk.geometry("54x335")
+                self.tk.geometry("54x" + str(self.height))
                 optionScale = Scale()
-                scaleGainButton = Button(self.tk, text = 'Gain', fg = self.Pallet['widgettext'], bg = self.Pallet['buttonbackgroundunmuted'], activebackground = self.Pallet['buttonbackgroundunmuted'],
-                                         command = lambda: self.__setScaleOption('gain', input_output, channel_number, optionScale, scaleValButton))
-                scaleGainButton.bind('<Enter>', lambda eff, text="Gain Button": self.ScreenReader.outputSpeech(text))
-                scaleGainButton.place(x = 20, y = 0, width = 34)
+                if(self.VoicemeeterController.getVersion() == 'basic'):
+                    scaleValButton = Button(self.tk,
+                                            text=self.VoicemeeterController.getValue(input_output, channel_number,'gain'),
+                                            fg=self.Pallet['widgettext'], bg=self.Pallet['buttonbackgroundunmuted'],
+                                            activebackground=self.Pallet['buttonbackgroundunmuted'],
+                                            command=lambda: optionScale.set(0))
+                    scaleValButton.bind("<Enter>", lambda eff, text="Reset Slider Button": self.ScreenReader.outputSpeech(text))
+                    scaleValButton.place(x=20, y=100, width=34)
 
-                scaleLimitButton = Button(self.tk, text="Limit", fg=self.Pallet['widgettext'], bg=self.Pallet['buttonbackgroundunmuted'], activebackground=self.Pallet['buttonbackgroundunmuted'],
-                                          command=lambda: self.__setScaleOption('limit', input_output, channel_number, optionScale, scaleValButton))
-                scaleLimitButton.bind("<Enter>", lambda eff, text="Limit Button": self.ScreenReader.outputSpeech(text))
-                scaleLimitButton.place(x=20, y=25, width=34)
+                    self.__setScaleOption('gain', input_output, channel_number, optionScale, scaleValButton)
+                    optionScale.place(x=27, y=0, h=100)
+                elif(self.VoicemeeterController.getVersion() == 'banana'):
+                    scaleValButton = Button(self.tk, text=self.VoicemeeterController.getValue(input_output, channel_number, 'gain'), fg=self.Pallet['widgettext'],bg=self.Pallet['buttonbackgroundunmuted'], activebackground=self.Pallet['buttonbackgroundunmuted'],
+                                            command=lambda: optionScale.set(0))
+                    scaleValButton.bind("<Enter>", lambda eff, text="Reset Slider Button": self.ScreenReader.outputSpeech(text))
+                    scaleValButton.place(x=20, y=185, width=34)
 
-                scaleCompButton = Button(self.tk, text="Comp", fg=self.Pallet['widgettext'], bg=self.Pallet['buttonbackgroundunmuted'], activebackground=self.Pallet['buttonbackgroundunmuted'],
-                                         command=lambda: self.__setScaleOption('comp', input_output, channel_number, optionScale, scaleValButton))
-                scaleCompButton.bind("<Enter>", lambda eff, text="Comp Button": self.ScreenReader.outputSpeech(text))
-                scaleCompButton.place(x=20, y=50, width=34)
+                    if(input_output == "input"):
+                        options = ['gain', 'limit', 'comp', 'gate']
+                        self.__createScaleButtons(options, input_output, channel_number, optionScale, scaleValButton)
+                        self.__setScaleOption('gain', input_output, channel_number, optionScale, scaleValButton)
+                        optionScale.place(x=27, y=100, h=85)
+                    else:
+                        self.__setScaleOption('gain', input_output, channel_number, optionScale, scaleValButton)
+                        optionScale.place(x=27, y=0, h=185)
+                elif (self.VoicemeeterController.getVersion() == 'potato'):
+                    scaleValButton = Button(self.tk,
+                                            text=self.VoicemeeterController.getValue(input_output, channel_number,
+                                                                                     'gain'),
+                                            fg=self.Pallet['widgettext'], bg=self.Pallet['buttonbackgroundunmuted'],
+                                            activebackground=self.Pallet['buttonbackgroundunmuted'],
+                                            command=lambda: optionScale.set(0))
+                    scaleValButton.bind("<Enter>",
+                                        lambda eff, text="Reset Slider Button": self.ScreenReader.outputSpeech(text))
+                    scaleValButton.place(x=20, y=309, width=34)
 
-                scaleGateButton = Button(self.tk, text="Gate", fg=self.Pallet['widgettext'], bg=self.Pallet['buttonbackgroundunmuted'],activebackground=self.Pallet['buttonbackgroundunmuted'],
-                                         command=lambda: self.__setScaleOption('gate', input_output, channel_number,optionScale, scaleValButton))
-                scaleGateButton.bind("<Enter>", lambda eff, text="Gate Button": self.ScreenReader.outputSpeech(text))
-                scaleGateButton.place(x=20, y=75, width=34)
-
-                scaleValButton = Button(self.tk, text=self.VoicemeeterController.getValue(input_output, channel_number, 'gain'), fg=self.Pallet['widgettext'],bg=self.Pallet['buttonbackgroundunmuted'], activebackground=self.Pallet['buttonbackgroundunmuted'],
-                                        command=lambda: optionScale.set(0))
-                scaleValButton.bind("<Enter>", lambda eff, text="Reset Slider Button": self.ScreenReader.outputSpeech(text))
-                scaleValButton.place(x=20, y=309, width=34)
-
-                optionScale = Scale(self.tk, bg=self.Pallet['sliderslide'], activebackground=self.Pallet['slideractive'], troughcolor=self.Pallet['sliderbackground'],
-                                    highlightthickness=0, from_=self.__getRange('gain', 'up'), to=self.__getRange('gain', 'low'), showvalue=0, resolution=.1,
-                                    command=lambda eff: self.VoicemeeterController.setValue(input_output, channel_number, 'gain', optionScale.get(), scaleValButton))
-                optionScale.bind("<Enter>", lambda eff, text="Slider": self.ScreenReader.outputSpeech(text))
-                optionScale.set(self.VoicemeeterController.getValue(input_output, channel_number, 'gain'))
-                optionScale.place(x=27, y=100, h=208)
+                    if (input_output == "input"):
+                        options = ['gain', 'limit', 'comp', 'gate']
+                        self.__createScaleButtons(options, input_output, channel_number, optionScale, scaleValButton)
+                        self.__setScaleOption('gain', input_output, channel_number, optionScale, scaleValButton)
+                        optionScale.place(x=27, y=100, h=208)
+                    else:
+                        self.__setScaleOption('gain', input_output, channel_number, optionScale, scaleValButton)
+                        optionScale.place(x=27, y=0, h=308)
             else:
-                self.tk.geometry("18x335")
+                self.tk.geometry("18x" + str(self.height))
+                for button in self.scaleButtons:
+                    button.destroy()
+
+    def __createScaleButtons(self, options, input_output, channel_number, optionScale, scaleValButton):
+        buttonY = 0
+        for option in options:
+            print(input_output + " " + str(channel_number) + " " + option)
+            scaleButton = Button(self.tk, text=option, fg=self.Pallet['widgettext'],
+                                    bg=self.Pallet['buttonbackgroundunmuted'],
+                                    activebackground=self.Pallet['buttonbackgroundunmuted'])
+            scaleButton.bind('<Button-1>', lambda eff, option=option, input_output=input_output, channel_number=channel_number, optionScale=optionScale, scaleValButton=scaleValButton
+                                    : self.__setScaleOption(option, input_output, channel_number, optionScale,
+                                                                          scaleValButton))
+            scaleButton.bind('<Enter>', lambda eff, text=(option + " Button"): self.ScreenReader.outputSpeech(text))
+            scaleButton.place(x=20, y=buttonY, width=34)
+            buttonY += 25
+            self.scaleButtons.append(scaleButton)
 
     def __setScaleOption(self, option, input_output, channel_number, scale, button):
         self.ScreenReader.outputSpeech("Setting option to" + option)
         button.config(text=(self.VoicemeeterController.getValue(input_output, channel_number, option)))
-        scale.set(self.VoicemeeterController.getValue(input_output, channel_number, option))
         scale.config(bg=self.Pallet['sliderslide'], activebackground=self.Pallet['slideractive'], troughcolor=self.Pallet['sliderbackground'], highlightthickness=0,
                      from_=self.__getRange(option, 'up'), to=self.__getRange(option, 'low'), showvalue=0, resolution=.1,
-                     command=lambda eff: self.VoicemeeterController.setValue(input_output, channel_number, option, scale.get(), button))
+                     command = lambda eff: self.VoicemeeterController.setValue(input_output, channel_number, option, scale.get(), button))
+        scale.set(self.VoicemeeterController.getValue(input_output, channel_number, option))
+        # scale.bind('<Button-1>', lambda eff: self.VoicemeeterController.setValue(input_output, channel_number, option, scale.get(), button))
 
     def __getRange(self, option, bound):
         if bound == 'up':
@@ -98,7 +138,7 @@ class VMRemote:
         ypos = 0
         self.inputButtons = []
         for input in self.VoicemeeterController.getInputs():
-            button = Button(self.tk, text=self.VoicemeeterController.getName(input)[0], bg=self.VoicemeeterController.getBackgroundColor('input', input), highlightthickness=0, fg=self.Pallet['widgettext'])
+            button = Button(self.tk, text=self.VoicemeeterController.getName(input)[:2], bg=self.VoicemeeterController.getBackgroundColor('input', input), highlightthickness=0, fg=self.Pallet['widgettext'])
             button.bind("<Button-1>",
                         lambda eff, input=input, button=button: self.VoicemeeterController.muteChannel('input', input, button, self.VoicemeeterController.getName(input)))
             button.bind("<Button-3>", lambda eff, input=input: self.__resize('input', input))
@@ -121,7 +161,7 @@ class VMRemote:
         LockControl = Button(self.tk, text="", bg=self.Pallet['buttonbackgroundunmuted'], fg=self.Pallet['widgettext'])
         LockControl.place(x=0, y=325, height=10, width=20)
         LockControl.bind("<Enter>", lambda eff, text=("Lock button"): self.ScreenReader.outputSpeech(text))
-        LockControl.bind("<Button-1>", lambda eff: self.Voicemeeter.lockControl(LockControl))
+        LockControl.bind("<Button-1>", lambda eff: self.VoicemeeterController.lockControl(LockControl))
 
     def __dirtyUpdate(self):
         while True:

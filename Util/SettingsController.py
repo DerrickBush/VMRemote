@@ -34,8 +34,6 @@ class Settings():
                                    'XYPosition': 'None',
                                    'ScreenReader': 'None',
                                    'VMVersion': 'None',
-                                   'ignoredInputs': "None",
-                                   'ignoredOutputs': "None",
                                    'lockedOnStart': 'False'}
         with open(path.join(self._settingsDirectory, 'settings.ini'), 'w') as configfile:
             self.config.write(configfile)

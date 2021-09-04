@@ -40,11 +40,9 @@ class VMController():
     #Updates channel
     def updateChannel(self, input_output, channel_number, button):
         if input_output == 'input':
-            if not self.isLocked:
                 currentMute = self.VoicemeterRemote.inputs[channel_number].mute
                 button.configure(bg = self.__getState(currentMute), activebackground = self.__getState(currentMute))
         elif input_output == 'output':
-            if not self.isLocked:
                 currentMute = self.VoicemeterRemote.outputs[channel_number].mute
                 button.configure(bg = self.__getState(currentMute), activebackground = self.__getState(currentMute))
 
@@ -77,12 +75,12 @@ class VMController():
 
     #Locks or unlocks input to UI
     def lockControl(self, button):
-        if button.cget('bg') == self.Pallet['buttonbackgroundmuted']:
+        if button.cget('bg') == self.Pallet['buttonbackgroundunmuted']:
             self.isLocked = True
             button.configure(bg = self.Pallet['buttonbackgroundmuted'])
         else:
             self.isLocked = False
-            button.configure(bg=self.Pallet['buttonBackgroundunmuted'])
+            button.configure(bg=self.Pallet['buttonbackgroundunmuted'])
 
     #Returns current background color
     def getBackgroundColor(self, input_output, channel_number):
@@ -95,7 +93,12 @@ class VMController():
 
     #Returns input name(Only works with inputs)
     def getName(self, channel_number):
-        return self.VoicemeterRemote.inputs[channel_number].label
+        name = self.VoicemeterRemote.inputs[channel_number].label
+        index = self.VoicemeterRemote.inputs[channel_number].index
+        if name == "":
+            return "I" + str(index)
+        else:
+            return name
 
     def getInputs(self):
         inputs = self.VoicemeterRemote.inputs
@@ -111,6 +114,9 @@ class VMController():
         for output in outputs:
             returnOutputs.append(output.index)
         return returnOutputs
+
+    def getVersion(self):
+        return self.Settings.getSetting('vmversion')
 
     def logout(self):
         self.VoicemeterRemote.logout()
